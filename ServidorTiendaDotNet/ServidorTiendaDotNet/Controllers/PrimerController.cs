@@ -25,8 +25,6 @@ namespace ServidorTiendaDotNet.Controllers
             return "Hola Mundo desde .NET Core";
         }
 
-
-
         [HttpGet("flores")]
         public List<Flor> GetFlores()
         {
