@@ -4,15 +4,22 @@ namespace ServidorTiendaDotNet.Models
 {
     public class Flor
     {
-        [JsonPropertyName("id")]
+        //[JsonPropertyName("id")]
         public int Id { get; set; }
+
         [JsonPropertyName("nombre")]
-        public string Nombre { get; set; }
-        [JsonPropertyName("descripcion")]
-        public string Descripcion { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+
+        [JsonPropertyName("color")]
+        public string Color { get; set; } = string.Empty;
+
         [JsonPropertyName("precio")]
         public decimal Precio { get; set; }
-        [JsonPropertyName("activo")]
-        public bool Activo { get; set; }
+
+        [JsonPropertyName("enStock")]
+        public bool EnStock { get; set; }
+
+        //[JsonPropertyName("fechaIngreso")]
+        //public DateTime FechaIngreso { get; set; } = DateTime.UtcNow;
     }
 }

@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>2529c0a3-8c51-4d60-9b1a-c141a1070d92</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,8 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DB\" />
-    <Folder Include="Services\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

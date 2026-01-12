@@ -1,11 +1,38 @@
+using ServidorTiendaDotNet.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configuración de sesiones
+builder.Services.AddDataProtection();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// Inyección de dependencia para la conexión a SQLite
+builder.Services.AddScoped(sp =>
+{
+    var connString = builder.Configuration.GetConnectionString("DefaultSQLite")
+                     ?? "Data Source=Data/localdb.db";
+
+    //var conn = new Microsoft.Data.Sqlite.SqliteConnection(connString);
+    
+    return new Microsoft.Data.Sqlite.SqliteConnection(connString);
+});
+
+// Inyección de dependencia para el servicio de flores
+builder.Services.AddScoped<IFlorService, FlorService>();
 
 var app = builder.Build();
 
@@ -15,6 +42,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Habilitar el uso de sesiones
+app.UseSession();
 
 app.UseHttpsRedirection();
 

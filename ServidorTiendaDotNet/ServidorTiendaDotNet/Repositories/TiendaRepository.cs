@@ -46,9 +46,9 @@ namespace ServidorTiendaDotNet.Repositories
                     {
                         Id = reader.GetInt32(0),
                         Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                        Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                        Precio = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3),
-                        Activo = !reader.IsDBNull(4) && reader.GetBoolean(4)
+                        Color = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                        Precio = reader.GetDecimal(3),
+                        EnStock = reader.GetBoolean(4)
                     };
                     flores.Add(flor);
                 }
