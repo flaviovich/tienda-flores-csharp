@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace ServidorTiendaDotNet.Models
 {
@@ -6,11 +7,13 @@ namespace ServidorTiendaDotNet.Models
     {
         public int Id { get; set; }
 
-        [JsonPropertyName("flores")]        
-        public List<Flor> Flores { get; set; } = new List<Flor>();
+        [JsonPropertyName("items")]
+        public List<CarritoItem> Items { get; set; } = new List<CarritoItem>();
 
         [JsonPropertyName("cantidadItems")]
-        public int CantidadItems => Flores.Count;
+        public int CantidadItems => Items.Sum(i => i.Cantidad);
 
+        [JsonPropertyName("total")]
+        public decimal Total => Items.Sum(i => i.Subtotal);
     }
 }

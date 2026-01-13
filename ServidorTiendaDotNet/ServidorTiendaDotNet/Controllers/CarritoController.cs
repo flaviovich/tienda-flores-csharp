@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Extensions;
+using ServidorTiendaDotNet.Services;
 
 namespace ServidorTiendaDotNet.Controllers
 {
@@ -9,14 +10,17 @@ namespace ServidorTiendaDotNet.Controllers
     public class CarritoController : ControllerBase
     {
         private readonly ILogger<CarritoController> _logger;
+        private readonly IFlorService _florService;
 
-        public CarritoController(ILogger<CarritoController> logger)
+        public CarritoController(ILogger<CarritoController> logger,
+            IFlorService florService)
         {
             _logger = logger;
+            _florService = florService;
         }
 
         [HttpPost("agregar")]
-        public IActionResult AgregarAlCarrito([FromBody] Dictionary<string, object> datos)
+        public async Task<IActionResult> AgregarAlCarrito([FromBody] Dictionary<string, object> datos)
         {
             _logger.LogInformation("Petición para agregar al carrito recibida");
 
@@ -56,32 +60,39 @@ namespace ServidorTiendaDotNet.Controllers
                 carrito = new List<Carrito> { carritoExistente };
             }
 
-            // Buscar la flor en el catálogo disponible (sesión u otra fuente)
-            List<Flor>? catalogo = HttpContext.Session.GetObjectFromJson<List<Flor>>("Flores");
-
-            Flor? flor = catalogo?.FirstOrDefault(f => f.Id == florId);
+            // Buscar en la bd
+            var flor = await _florService.GetByIdAsync(florId);
 
             if (flor == null)
             {
-                // Si no hay catálogo en sesión, no se puede buscar en DB aquí. Devolver error claro.
                 return NotFound($"No se encontró la flor con id {florId}");
             }
 
-            // Agregar la misma flor "cantidad" veces
-            for (int i = 0; i < cantidad; i++)
-            {
-                carritoExistente.Flores.Add(flor);
-            }
+            var item = carritoExistente.Items.FirstOrDefault(i => i.FlorId == flor.Id);
 
-            // O mejor: si tu modelo lo permite, tener una propiedad Cantidad en una clase intermedia
-            // carritoExistente.Items.Add(new ItemCarrito { Flor = flor, Cantidad = cantidad });
+            if (item == null)
+            {
+                item = new CarritoItem
+                {
+                    FlorId = flor.Id,
+                    Flor = flor,
+                    Cantidad = cantidad,
+                    PrecioUnitario = flor.Precio
+                };
+                carritoExistente.Items.Add(item);
+            }
+            else
+            {
+                item.Cantidad += cantidad;
+            }
 
             HttpContext.Session.SetObjectAsJson("Carrito", carrito);
 
             return Ok(new
             {
                 mensaje = $"Agregado {cantidad} unidad(es) de la flor {florId}",
-                totalItems = carritoExistente.Flores.Count,
+                totalItems = carritoExistente.CantidadItems,
+                total = carritoExistente.Total,
                 carrito = carritoExistente
             });
         }
@@ -96,15 +107,8 @@ namespace ServidorTiendaDotNet.Controllers
             
             if (carritoExistente == null)
             {
-                return NotFound("El carrito está vacío.");
+                carritoExistente = new Carrito { Id = 1 };
             }
-
-            List<Carrito> productosCarritoCompleto = new List<Carrito>();
-            //foreach (var producto in productosCarritoCompleto)
-            //{
-            //    Flor flor = new 
-
-            //}
 
             return Ok(carritoExistente);
         }
