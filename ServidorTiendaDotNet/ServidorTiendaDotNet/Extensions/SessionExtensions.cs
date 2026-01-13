@@ -13,6 +13,7 @@ namespace ServidorTiendaDotNet.Extensions
         public static T? GetObjectFromJson<T>(this ISession session, string key)
         {
             var value = session.GetString(key);
+
             return value == null ? default : JsonSerializer.Deserialize<T>(value);
         }
     }

@@ -8,7 +8,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.CustomSchemaIds(type =>
+    {
+        // Quita el sufijo "DTO" si existe
+        var name = type.Name;
+        if (name.EndsWith("DTO"))
+        {
+            return name[..^3];  // quita las últimas 3 letras ("DTO")
+        }
+        return name;
+    });
+});
 
 // Configuración de sesiones
 builder.Services.AddDataProtection();
@@ -33,6 +45,9 @@ builder.Services.AddScoped(sp =>
 
 // Inyección de dependencia para el servicio de flores
 builder.Services.AddScoped<IFlorService, FlorService>();
+builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<ICarritoService, CarritoService>();
+builder.Services.AddScoped<IPedidoDetalleService, PedidoDetalleService>();
 
 var app = builder.Build();
 

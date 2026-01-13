@@ -20,30 +20,27 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpPost("agregar")]
-        public async Task<IActionResult> AgregarAlCarrito([FromBody] Dictionary<string, object> datos)
+        public async Task<IActionResult> AgregarAlCarrito(CarritoDTO dto)
         {
             _logger.LogInformation("Petición para agregar al carrito recibida");
 
-            if (datos == null)
+            if (dto == null)
             {
                 return BadRequest("No se recibió ningún dato en el body");
             }
 
-            // Extraer florId
-            if (!datos.TryGetValue("florId", out var florIdObj) ||
-                florIdObj == null ||
-                !int.TryParse(florIdObj.ToString(), out int florId))
+            // Extraer datos del DTO
+            int florId = dto.FlorId;
+            int cantidad = 1;
+
+            if (dto is not null && dto.Cantidad is int c && c > 0)
             {
-                return BadRequest("El campo 'florId' es obligatorio y debe ser un número entero");
+                cantidad = c;
             }
 
-            // Extraer cantidad (opcional → por defecto 1)
-            int cantidad = 1;
-            if (datos.TryGetValue("cantidad", out var cantidadObj) &&
-                cantidadObj != null &&
-                int.TryParse(cantidadObj.ToString(), out int cantTemp))
+            if (florId <= 0)
             {
-                cantidad = cantTemp;
+                return BadRequest("El identificador de la flor (florId) es obligatorio y debe ser mayor que 0");
             }
 
             if (cantidad < 1)
@@ -112,5 +109,19 @@ namespace ServidorTiendaDotNet.Controllers
 
             return Ok(carritoExistente);
         }
+
+        [HttpPost("vaciar")]
+        public IActionResult VaciarCarrito()
+        {
+            _logger.LogInformation("Petición para vaciar el carrito recibida");
+
+            HttpContext.Session.Remove("Carrito");
+
+            return Ok(new
+            {
+                mensaje = "Carrito vaciado correctamente"
+            });
+        }
+
     }
 }
