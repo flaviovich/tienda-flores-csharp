@@ -3,7 +3,7 @@ using ServidorTiendaDotNet.Services;
 
 namespace ServidorTiendaDotNet.Controllers
 {
-    // En Java esto ser�a un @RestController
+    // En Java esto sería un @RestController
     [ApiController]
 
     // En Java esto ser�a un @RequestMapping("/primer")
@@ -22,7 +22,7 @@ namespace ServidorTiendaDotNet.Controllers
         //[HttpGet("holamundo")]
         //public string GetHolaMundo()
         //{
-        //    _logger.LogInformation("Se ha recibido una petici�n a /api/flores/holamundo");
+        //    _logger.LogInformation("Se ha recibido una petición a /api/flores/holamundo");
 
         //    return "Hola Mundo desde .NET Core";
         //}
