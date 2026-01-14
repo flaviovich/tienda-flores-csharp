@@ -4,25 +4,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
+    //c.EnableAnnotations();
     c.CustomSchemaIds(type =>
     {
         // Quita el sufijo "DTO" si existe
         var name = type.Name;
         if (name.EndsWith("DTO"))
         {
-            return name[..^3];  // quita las últimas 3 letras ("DTO")
+            return name[..^3];  // quita las ï¿½ltimas 3 letras ("DTO")
         }
         return name;
     });
 });
 
-// Configuración de sesiones
+// Configuraciï¿½n de sesiones
 builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -32,7 +33,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Inyección de dependencia para la conexión a SQLite
+// Inyecciï¿½n de dependencia para la conexiï¿½n a SQLite
 builder.Services.AddScoped(sp =>
 {
     var connString = builder.Configuration.GetConnectionString("DefaultSQLite")
@@ -43,7 +44,7 @@ builder.Services.AddScoped(sp =>
     return new Microsoft.Data.Sqlite.SqliteConnection(connString);
 });
 
-// Inyección de dependencia para el servicio de flores
+// Inyecciï¿½n de dependencia para el servicio de flores
 builder.Services.AddScoped<IFlorService, FlorService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();

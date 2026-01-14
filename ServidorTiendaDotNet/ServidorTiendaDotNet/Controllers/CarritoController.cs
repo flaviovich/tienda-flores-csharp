@@ -1,26 +1,57 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Extensions;
+using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Services;
 
 namespace ServidorTiendaDotNet.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //[Tags("carrito")]
     public class CarritoController : ControllerBase
     {
-        private readonly ILogger<CarritoController> _logger;
-        private readonly IFlorService _florService;
+        readonly ILogger<CarritoController> _logger;
+        readonly IFlorService _florService;
 
         public CarritoController(ILogger<CarritoController> logger,
-            IFlorService florService)
+                                 IFlorService florService)
         {
             _logger = logger;
             _florService = florService;
         }
 
-        [HttpPost("agregar")]
-        public async Task<IActionResult> AgregarAlCarrito(CarritoDTO dto)
+        [HttpGet]
+        public IActionResult ObtenerCarrito()
+        {
+            _logger.LogInformation("Se ha recibido una petición para obtener el carrito.");
+
+            List<Carrito>? carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
+            var carritoExistente = carrito?.FirstOrDefault();
+
+            if (carritoExistente == null)
+            {
+                carritoExistente = new Carrito { Id = 1 };
+            }
+
+            return Ok(carritoExistente);
+        }
+
+        [HttpDelete]
+        public IActionResult VaciarCarrito()
+        {
+            _logger.LogInformation("Petición para vaciar el carrito recibida");
+
+            HttpContext.Session.Remove("Carrito");
+
+            return Ok(
+                new
+                {
+                    mensaje = "Carrito vaciado correctamente"
+                });
+        }
+
+        [HttpPost("items")]
+        public async Task<IActionResult> AgregarItem(CarritoDTO dto)
         {
             _logger.LogInformation("Petición para agregar al carrito recibida");
 
@@ -85,42 +116,14 @@ namespace ServidorTiendaDotNet.Controllers
 
             HttpContext.Session.SetObjectAsJson("Carrito", carrito);
 
-            return Ok(new
-            {
-                mensaje = $"Agregado {cantidad} unidad(es) de la flor {florId}",
-                totalItems = carritoExistente.CantidadItems,
-                total = carritoExistente.Total,
-                carrito = carritoExistente
-            });
-        }
-
-        [HttpGet]
-        public IActionResult ObtenerCarrito()
-        {
-            _logger.LogInformation("Se ha recibido una petición para obtener el carrito.");
-
-            List<Carrito>? carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
-            var carritoExistente = carrito?.FirstOrDefault();
-            
-            if (carritoExistente == null)
-            {
-                carritoExistente = new Carrito { Id = 1 };
-            }
-
-            return Ok(carritoExistente);
-        }
-
-        [HttpPost("vaciar")]
-        public IActionResult VaciarCarrito()
-        {
-            _logger.LogInformation("Petición para vaciar el carrito recibida");
-
-            HttpContext.Session.Remove("Carrito");
-
-            return Ok(new
-            {
-                mensaje = "Carrito vaciado correctamente"
-            });
+            return Ok(
+                new
+                {
+                    mensaje = $"Agregado {cantidad} unidad(es) de la flor {florId}",
+                    totalItems = carritoExistente.CantidadItems,
+                    total = carritoExistente.Total,
+                    carrito = carritoExistente
+                });
         }
 
     }

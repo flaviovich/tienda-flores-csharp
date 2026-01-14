@@ -2,7 +2,6 @@
 using ServidorTiendaDotNet.Extensions;
 using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Services;
-using System.Threading.Tasks;
 
 namespace ServidorTiendaDotNet.Controllers
 {
@@ -10,8 +9,8 @@ namespace ServidorTiendaDotNet.Controllers
     [Route("api/[controller]")]
     public class PedidosController : ControllerBase
     {
-        private readonly ILogger<PedidosController> _logger;
-        private readonly IPedidoService _pedidoService;
+        readonly ILogger<PedidosController> _logger;
+        readonly IPedidoService _pedidoService;
 
         public PedidosController(ILogger<PedidosController> logger, IPedidoService pedido)
         {
@@ -19,18 +18,20 @@ namespace ServidorTiendaDotNet.Controllers
             _pedidoService = pedido;
         }
 
-        [HttpPost("registrar")]
+        [HttpPost]
         public async Task<IActionResult> RegistrarPedido(Pedido pedido)
         {
             _logger.LogInformation("Petición para registrar pedido recibida");
 
             List<Carrito>? carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
+
             if (carrito == null || !carrito.Any())
             {
                 return BadRequest("El carrito está vacío. No se puede registrar el pedido.");
             }
 
             List<Pedido>? pedidos = HttpContext.Session.GetObjectFromJson<List<Pedido>>("Pedidos");
+
             if (pedidos == null)
             {
                 pedidos = new List<Pedido>();

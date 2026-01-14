@@ -1,0 +1,5 @@
+Instalar Annotations si es necesario para Swagger
+dotnet add package Swashbuckle.AspNetCore.Annotations
+
+Actualizar Swagger si da error
+dotnet add package Swashbuckle.AspNetCore --version 8.0.0

@@ -5,7 +5,7 @@ namespace ServidorTiendaDotNet.Services
 {
     public class PedidoService : IPedidoService
     {
-        private readonly SqliteConnection _connection;
+        readonly SqliteConnection _connection;
 
         public PedidoService(SqliteConnection connection)
         {
