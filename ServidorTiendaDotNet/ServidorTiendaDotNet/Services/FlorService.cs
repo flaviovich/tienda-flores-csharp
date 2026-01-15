@@ -5,7 +5,7 @@ namespace ServidorTiendaDotNet.Services
 {
     public class FlorService : IFlorService
     {
-        private readonly SqliteConnection _connection;
+        readonly SqliteConnection _connection;
 
         public FlorService(SqliteConnection connection)
         {
@@ -34,6 +34,7 @@ namespace ServidorTiendaDotNet.Services
                 flor.Color = reader.GetString(2);
                 flor.Precio = reader.GetDecimal(3);
                 flor.EnStock = reader.GetBoolean(4);
+
                 //flor.FechaIngreso = reader.GetDateTime(5);
                 flores.Add(flor);
             }
@@ -61,6 +62,7 @@ namespace ServidorTiendaDotNet.Services
                 flor.Color = reader.GetString(2);
                 flor.Precio = reader.GetDecimal(3);
                 flor.EnStock = reader.GetBoolean(4);
+
                 //flor.FechaIngreso = reader.GetDateTime(5);
 
                 return flor;
@@ -77,15 +79,17 @@ namespace ServidorTiendaDotNet.Services
             }
 
             using var command = _connection.CreateCommand();
-            command.CommandText = "INSERT INTO flores (nombre, color, precio, en_stock) VALUES ($nombre, $color, $precio, $en_stock);";
+            command.CommandText = "INSERT INTO flores (nombre, color, precio, en_stock) " +
+                                  "VALUES ($nombre, $color, $precio, $en_stock);";
             command.Parameters.AddWithValue("$nombre", flor.Nombre);
             command.Parameters.AddWithValue("$color", flor.Color);
             command.Parameters.AddWithValue("$precio", flor.Precio);
             command.Parameters.AddWithValue("$en_stock", flor.EnStock);
             command.ExecuteNonQuery();
 
-            command.CommandText="SELECT last_insert_rowid();";
-            var id = (int)command.ExecuteScalar()!;
+            command.CommandText = "SELECT last_insert_rowid();";
+            var lastIdObj = command.ExecuteScalar();
+            var id = Convert.ToInt32((long)lastIdObj!);
             flor.Id = (int)id;
 
             return Task.FromResult(flor);

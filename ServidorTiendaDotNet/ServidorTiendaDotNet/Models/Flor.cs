@@ -19,7 +19,7 @@ namespace ServidorTiendaDotNet.Models
         [JsonPropertyName("enStock")]
         public bool EnStock { get; set; }
 
-        [JsonPropertyName("imagen")]
+        [JsonIgnore]
         public IFormFile? Imagen { get; set; }
 
         //[JsonPropertyName("fechaIngreso")]

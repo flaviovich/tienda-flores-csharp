@@ -20,14 +20,6 @@ namespace ServidorTiendaDotNet.Controllers
             _florService = florService;
         }
 
-        //[HttpGet("holamundo")]
-        //public string GetHolaMundo()
-        //{
-        //    _logger.LogInformation("Se ha recibido una petición a /api/flores/holamundo");
-
-        //    return "Hola Mundo desde .NET Core";
-        //}
-
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -62,7 +54,7 @@ namespace ServidorTiendaDotNet.Controllers
                 await stream.FlushAsync();
             }
 
-            return CreatedAtAction(nameof(GetById), new { id = florCreada.Id }, florCreada);
+            return Ok(florCreada);
         }
     }
 
