@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Services;
 
 namespace ServidorTiendaDotNet.Controllers
@@ -46,5 +47,23 @@ namespace ServidorTiendaDotNet.Controllers
 
             return Ok(flor);
         }
+
+        [Consumes("multipart/form-data")]
+        [HttpPost]
+        public async Task<IActionResult> Create([FromForm] Flor nuevaFlor)
+        {
+            var florCreada = await _florService.CreateAsync(nuevaFlor);
+
+            if (nuevaFlor.Imagen is FormFile imagen)
+            {
+                var rutaImagen = Path.Combine("wwwroot", "images", $"{florCreada.Id}.jpg");
+                using var stream = new FileStream(rutaImagen, FileMode.Create);
+                await imagen.CopyToAsync(stream);
+                await stream.FlushAsync();
+            }
+
+            return CreatedAtAction(nameof(GetById), new { id = florCreada.Id }, florCreada);
+        }
     }
+
 }

@@ -71,7 +71,24 @@ namespace ServidorTiendaDotNet.Services
 
         public Task<Flor> CreateAsync(Flor flor)
         {
-            throw new NotImplementedException();
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                _connection.Open();
+            }
+
+            using var command = _connection.CreateCommand();
+            command.CommandText = "INSERT INTO flores (nombre, color, precio, en_stock) VALUES ($nombre, $color, $precio, $en_stock);";
+            command.Parameters.AddWithValue("$nombre", flor.Nombre);
+            command.Parameters.AddWithValue("$color", flor.Color);
+            command.Parameters.AddWithValue("$precio", flor.Precio);
+            command.Parameters.AddWithValue("$en_stock", flor.EnStock);
+            command.ExecuteNonQuery();
+
+            command.CommandText="SELECT last_insert_rowid();";
+            var id = (int)command.ExecuteScalar()!;
+            flor.Id = (int)id;
+
+            return Task.FromResult(flor);
         }
 
         public Task<bool> DeleteAsync(int id)

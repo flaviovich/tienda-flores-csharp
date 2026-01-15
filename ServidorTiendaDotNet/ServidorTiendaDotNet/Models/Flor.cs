@@ -19,6 +19,9 @@ namespace ServidorTiendaDotNet.Models
         [JsonPropertyName("enStock")]
         public bool EnStock { get; set; }
 
+        [JsonPropertyName("imagen")]
+        public IFormFile? Imagen { get; set; }
+
         //[JsonPropertyName("fechaIngreso")]
         //public DateTime FechaIngreso { get; set; } = DateTime.UtcNow;
     }
