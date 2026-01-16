@@ -80,7 +80,7 @@ namespace ServidorTiendaDotNet.Services
 
             using var command = _connection.CreateCommand();
             command.CommandText = "INSERT INTO flores (nombre, color, precio, en_stock) " +
-                                  "VALUES ($nombre, $color, $precio, $en_stock);";
+                                  "VALUES ($nombre, $color, $precio, 1);";
             command.Parameters.AddWithValue("$nombre", flor.Nombre);
             command.Parameters.AddWithValue("$color", flor.Color);
             command.Parameters.AddWithValue("$precio", flor.Precio);

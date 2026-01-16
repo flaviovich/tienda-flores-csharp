@@ -23,14 +23,16 @@ namespace ServidorTiendaDotNet.Services
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = @"
-                    INSERT INTO pedidos (nombre_cliente, numero_tarjeta, direccion_envio, fecha)
-                    VALUES ($cliente, $numero_tarjeta, $direccion_envio, $fecha);
+                    INSERT INTO pedidos (nombre_cliente, direccion_envio, telefono, email, numero_tarjeta)
+                    VALUES ($cliente, $direccion_envio, $telefono, $email, $numero_tarjeta);
                 ";
                 
                 command.Parameters.AddWithValue("$cliente", pedido.Cliente);
-                command.Parameters.AddWithValue("$numero_tarjeta", pedido.NumeroTarjeta);
                 command.Parameters.AddWithValue("$direccion_envio", pedido.DireccionEnvio);
-                command.Parameters.AddWithValue("$fecha", pedido.Fecha);
+                command.Parameters.AddWithValue("$telefono", pedido.Telefono);
+                command.Parameters.AddWithValue("$email", pedido.Email);
+                command.Parameters.AddWithValue("$numero_tarjeta", pedido.NumeroTarjeta);
+                //command.Parameters.AddWithValue("$fecha", pedido.Fecha);
                 await command.ExecuteNonQueryAsync();
 
                 // Obtener el ID del último registro insertado usando una consulta SQL

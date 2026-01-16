@@ -12,7 +12,16 @@ namespace ServidorTiendaDotNet.Models
         [JsonPropertyName("cliente")]
         public String Cliente { get; set; }
 
-        
+        [Required(ErrorMessage = "Teléfono no puede estar vacío")]
+        [RegularExpression("^[0-9+ ]{7,15}$")]
+        [JsonPropertyName("telefono")]
+        public String Telefono { get; set; }
+
+        [Required(ErrorMessage = "Email no puede estar vacío")]
+        [EmailAddress(ErrorMessage = "Email no es válido")]
+        [JsonPropertyName("email")]
+        public String Email { get; set; }
+
         [Required(ErrorMessage = "Tarjeta no puede estar vacio")]
         [RegularExpression("^[0-9 ]{16,22}$")]
         [JsonPropertyName("numeroTarjeta")]
@@ -23,7 +32,7 @@ namespace ServidorTiendaDotNet.Models
         [JsonPropertyName("direccionEnvio")]
         public string DireccionEnvio { get; set; } = string.Empty;
 
-        [JsonPropertyName("fecha")]
-        public DateTime Fecha { get; set; }
+        //[JsonPropertyName("fecha")]
+        //public DateTime Fecha { get; set; }
     }
 }
