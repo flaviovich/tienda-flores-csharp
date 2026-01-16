@@ -14,7 +14,7 @@ namespace ServidorTiendaDotNet.Models
 
         
         [Required(ErrorMessage = "Tarjeta no puede estar vacio")]
-        [RegularExpression("^[0-9 ]{16-22}$")]
+        [RegularExpression("^[0-9 ]{16,22}$")]
         [JsonPropertyName("numeroTarjeta")]
         public string NumeroTarjeta { get; set; }
 
