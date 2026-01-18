@@ -16,7 +16,5 @@ namespace ServidorTiendaDotNet.Services
             throw new NotImplementedException();
         }
 
-        // Implementación de métodos para manejar el carrito de compras
-
     }
 }

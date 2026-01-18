@@ -19,7 +19,7 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RegistrarPedido(Pedido pedido)
+        public async Task<IActionResult> CreateOrder(Pedido pedido)
         {
             _logger.LogInformation("Petición para registrar pedido recibida");
 

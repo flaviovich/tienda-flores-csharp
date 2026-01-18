@@ -6,7 +6,7 @@ namespace ServidorTiendaDotNet.Models
     {
         [JsonPropertyName("florId")] public int FlorId { get; set; }
 
-        [JsonPropertyName("flor")] public Flor? Flor { get; set; }
+        [JsonPropertyName("flor")] public FlorResponse? Flor { get; set; }
 
         [JsonPropertyName("cantidad")] public int Cantidad { get; set; } = 1;
 

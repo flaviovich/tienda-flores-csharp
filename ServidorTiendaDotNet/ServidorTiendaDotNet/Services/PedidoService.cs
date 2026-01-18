@@ -32,7 +32,6 @@ namespace ServidorTiendaDotNet.Services
                 command.Parameters.AddWithValue("$telefono", pedido.Telefono);
                 command.Parameters.AddWithValue("$email", pedido.Email);
                 command.Parameters.AddWithValue("$numero_tarjeta", pedido.NumeroTarjeta);
-                //command.Parameters.AddWithValue("$fecha", pedido.Fecha);
                 await command.ExecuteNonQueryAsync();
 
                 // Obtener el ID del último registro insertado usando una consulta SQL
@@ -43,7 +42,8 @@ namespace ServidorTiendaDotNet.Services
                     pedido.Id = Convert.ToInt32(result);
                 }
 
-                // Insertar los detalles del pedido
+                // Insertar los detalles del pedido y calcular el total
+                decimal total = 0;
                 foreach (var item in carrito.Items)
                 {
                     using var detalleCommand = _connection.CreateCommand();
@@ -56,7 +56,20 @@ namespace ServidorTiendaDotNet.Services
                     detalleCommand.Parameters.AddWithValue("$cantidad", item.Cantidad);
                     detalleCommand.Parameters.AddWithValue("$precio_unitario", item.Flor.Precio);
                     await detalleCommand.ExecuteNonQueryAsync();
+
+                    total += item.Cantidad * item.Flor.Precio;
                 }
+
+                // Actualizar el total del pedido
+                using var updatePedidoCommand = _connection.CreateCommand();
+                updatePedidoCommand.CommandText = @"
+                    UPDATE pedidos
+                    SET total = $total
+                    WHERE id = $pedido_id;
+                ";
+                updatePedidoCommand.Parameters.AddWithValue("$total", total);
+                updatePedidoCommand.Parameters.AddWithValue("$pedido_id", pedido.Id);
+                await updatePedidoCommand.ExecuteNonQueryAsync();
             }
             await transaction.CommitAsync();
 

@@ -4,9 +4,9 @@ namespace ServidorTiendaDotNet.Services
 {
     public interface IFlorService
     {
-        Task<List<Flor>> GetAllAsync();
-        Task<Flor?> GetByIdAsync(int id);
-        Task<Flor> CreateAsync(Flor flor);
+        Task<List<FlorResponse>> GetAllAsync();
+        Task<FlorResponse?> GetByIdAsync(int id);
+        Task<FlorCreateDto> CreateAsync(FlorCreateDto flor);
         Task<bool> UpdateAsync(int id, Flor flor);
         Task<bool> DeleteAsync(int id);
     }

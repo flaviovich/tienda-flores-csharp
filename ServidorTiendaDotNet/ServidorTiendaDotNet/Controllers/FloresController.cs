@@ -7,7 +7,7 @@ namespace ServidorTiendaDotNet.Controllers
     // En Java esto sería un @RestController
     [ApiController]
 
-    // En Java esto ser�a un @RequestMapping("/primer")
+    // En Java esto sería un @RequestMapping("/primer")
     [Route("api/[controller]")]
     public class FloresController : ControllerBase
     {
@@ -21,16 +21,17 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<FlorResponse>>> GetAll()
         {
-            _logger.LogInformation("Se ha recibido una petici�n a /api/flores");
+            _logger.LogInformation("Se ha recibido una petición a /api/flores");
             var flores = await _florService.GetAllAsync();
 
             return Ok(flores);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<FlorResponse>> GetById(int id)
         {
             var flor = await _florService.GetByIdAsync(id);
 
@@ -42,7 +43,7 @@ namespace ServidorTiendaDotNet.Controllers
 
         [Consumes("multipart/form-data")]
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] Flor nuevaFlor)
+        public async Task<ActionResult<FlorCreateDto>> Create([FromForm] FlorCreateDto nuevaFlor)
         {
             var florCreada = await _florService.CreateAsync(nuevaFlor);
 
@@ -54,7 +55,10 @@ namespace ServidorTiendaDotNet.Controllers
                 await stream.FlushAsync();
             }
 
-            return Ok(florCreada);
+            return CreatedAtAction(
+                nameof(GetById), 
+                new { id = florCreada.Id }, 
+                florCreada);
         }
     }
 

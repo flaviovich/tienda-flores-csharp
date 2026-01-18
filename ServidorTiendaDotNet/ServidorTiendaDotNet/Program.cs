@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.OpenApi.Models;
 using ServidorTiendaDotNet.Services;
 
@@ -17,15 +18,26 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 
+    c.IncludeXmlComments(
+        Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+
     //c.EnableAnnotations();
+    
     c.CustomSchemaIds(type =>
     {
-        // Quita el sufijo "DTO" si existe
+        // Quita el sufijo "Dto" si existe
         var name = type.Name;
-        if (name.EndsWith("DTO"))
+        
+        /*if (name.EndsWith("Dto"))
         {
-            return name[..^3];  // quita las �ltimas 3 letras ("DTO")
-        }
+            name = name[..^3]; // quita las últimas 3 letras ("Dto")
+        }*/
+
+        //name = name.Replace("Create", ""); //.Replace("Response", "");
+        
+        /*if (type.IsNested)
+            name = $"{type.DeclaringType?.Name}_{name}";*/
+
         return name;
     });
 });
@@ -63,10 +75,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ServidorTiendaDotNet API v1");
-    });
+    app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "ServidorTiendaDotNet API v1"); });
 }
 
 // Habilitar el uso de sesiones

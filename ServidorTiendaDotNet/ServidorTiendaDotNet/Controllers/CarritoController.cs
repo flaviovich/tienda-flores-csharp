@@ -14,44 +14,42 @@ namespace ServidorTiendaDotNet.Controllers
         readonly IFlorService _florService;
 
         public CarritoController(ILogger<CarritoController> logger,
-                                 IFlorService florService)
+            IFlorService florService)
         {
             _logger = logger;
             _florService = florService;
         }
 
         [HttpGet]
-        public IActionResult ObtenerCarrito()
+        public ActionResult<CarritoResponse> GetCart()
         {
             _logger.LogInformation("Se ha recibido una petición para obtener el carrito.");
 
-            List<Carrito>? carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
-            var carritoExistente = carrito?.FirstOrDefault();
+            var carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito")?
+                .FirstOrDefault() ?? new Carrito { Id = 1 };
 
-            if (carritoExistente == null)
-            {
-                carritoExistente = new Carrito { Id = 1 };
-            }
-
-            return Ok(carritoExistente);
+            return Ok(carrito.ToResponse());
         }
 
         [HttpDelete]
-        public IActionResult VaciarCarrito()
+        public IActionResult DeleteCart()
         {
             _logger.LogInformation("Petición para vaciar el carrito recibida");
 
             HttpContext.Session.Remove("Carrito");
 
-            return Ok(
-                new
-                {
-                    mensaje = "Carrito vaciado correctamente"
-                });
+            var response = new ApiMessageResponse
+            {
+                Mensaje = "Carrito vaciado correctamente.",
+                TotalItems = 0,
+                Total = 0m
+            };
+
+            return Ok(response);
         }
 
         [HttpPost("items")]
-        public async Task<IActionResult> AgregarItem(CarritoDTO dto)
+        public async Task<ActionResult<CarritoResponse>> AddCartItem([FromBody] AddCartItemDto dto)
         {
             _logger.LogInformation("Petición para agregar al carrito recibida");
 
@@ -62,30 +60,15 @@ namespace ServidorTiendaDotNet.Controllers
 
             // Extraer datos del DTO
             int florId = dto.FlorId;
-            int cantidad = 1;
-
-            if (dto is not null && dto.Cantidad is int c && c > 0)
-            {
-                cantidad = c;
-            }
 
             if (florId <= 0)
             {
                 return BadRequest("El identificador de la flor (florId) es obligatorio y debe ser mayor que 0");
             }
 
-            if (cantidad < 1)
+            if (dto.Cantidad < 1)
             {
                 return BadRequest("La cantidad debe ser mayor o igual a 1");
-            }
-
-            List<Carrito>? carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
-            var carritoExistente = carrito?.FirstOrDefault();
-
-            if (carritoExistente == null)
-            {
-                carritoExistente = new Carrito { Id = 1 };
-                carrito = new List<Carrito> { carritoExistente };
             }
 
             // Buscar en la bd
@@ -96,35 +79,30 @@ namespace ServidorTiendaDotNet.Controllers
                 return NotFound($"No se encontró la flor con id {florId}");
             }
 
-            var item = carritoExistente.Items.FirstOrDefault(i => i.FlorId == flor.Id);
+            var carritoList = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
+            var carrito = carritoList?.FirstOrDefault() ?? new Carrito { Id = 1 };
+
+            var item = carrito.Items.FirstOrDefault(i => i.FlorId == flor.Id);
 
             if (item == null)
             {
-                item = new CarritoItem
+                var newItem = new CarritoItem
                 {
                     FlorId = flor.Id,
                     Flor = flor,
-                    Cantidad = cantidad,
+                    Cantidad = dto.Cantidad,
                     PrecioUnitario = flor.Precio
                 };
-                carritoExistente.Items.Add(item);
+                carrito.Items.Add(newItem);
             }
             else
             {
-                item.Cantidad += cantidad;
+                item.Cantidad += dto.Cantidad;
             }
 
-            HttpContext.Session.SetObjectAsJson("Carrito", carrito);
+            HttpContext.Session.SetObjectAsJson("Carrito", new List<Carrito> { carrito });
 
-            return Ok(
-                new
-                {
-                    mensaje = $"Agregado {cantidad} unidad(es) de la flor {florId}",
-                    totalItems = carritoExistente.CantidadItems,
-                    total = carritoExistente.Total,
-                    carrito = carritoExistente
-                });
+            return Ok(carrito.ToResponse());
         }
-
     }
 }

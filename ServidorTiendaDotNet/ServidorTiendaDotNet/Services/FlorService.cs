@@ -12,9 +12,9 @@ namespace ServidorTiendaDotNet.Services
             _connection = connection;
         }
 
-        public async Task<List<Flor>> GetAllAsync()
+        public async Task<List<FlorResponse>> GetAllAsync()
         {
-            var flores = new List<Flor>();
+            var flores = new List<FlorResponse>();
 
             if (_connection.State != System.Data.ConnectionState.Open)
             {
@@ -22,27 +22,24 @@ namespace ServidorTiendaDotNet.Services
             }
 
             using var command = _connection.CreateCommand();
-            command.CommandText = "SELECT id, nombre, color, precio, en_stock, creado_en FROM flores;";
+            command.CommandText = "SELECT id, nombre, color, precio, stock FROM flores;";
             await using var reader = await command.ExecuteReaderAsync();
 
-            while (
-                reader.Read())
+            while (reader.Read())
             {
-                var flor = new Flor();
+                var flor = new FlorResponse();
                 flor.Id = reader.GetInt32(0);
                 flor.Nombre = reader.GetString(1);
                 flor.Color = reader.GetString(2);
                 flor.Precio = reader.GetDecimal(3);
-                flor.EnStock = reader.GetBoolean(4);
-
-                //flor.FechaIngreso = reader.GetDateTime(5);
+                flor.Stock = reader.GetInt32(4);
                 flores.Add(flor);
             }
 
             return flores;
         }
 
-        public async Task<Flor?> GetByIdAsync(int id)
+        public async Task<FlorResponse?> GetByIdAsync(int id)
         {
             if (_connection.State != System.Data.ConnectionState.Open)
             {
@@ -50,20 +47,19 @@ namespace ServidorTiendaDotNet.Services
             }
 
             using var command = _connection.CreateCommand();
-            command.CommandText = "SELECT id, nombre, color, precio, en_stock, creado_en FROM flores WHERE id = $id;";
+            command.CommandText = "SELECT id, nombre, color, precio, stock " +
+                                  "FROM flores WHERE id = $id;";
             command.Parameters.AddWithValue("$id", id);
             await using var reader = await command.ExecuteReaderAsync();
 
             if (reader.Read())
             {
-                var flor = new Flor();
+                var flor = new FlorResponse();
                 flor.Id = reader.GetInt32(0);
                 flor.Nombre = reader.GetString(1);
                 flor.Color = reader.GetString(2);
                 flor.Precio = reader.GetDecimal(3);
-                flor.EnStock = reader.GetBoolean(4);
-
-                //flor.FechaIngreso = reader.GetDateTime(5);
+                flor.Stock = reader.GetInt32(4);
 
                 return flor;
             }
@@ -71,28 +67,56 @@ namespace ServidorTiendaDotNet.Services
             return null;
         }
 
-        public Task<Flor> CreateAsync(Flor flor)
+        public async Task<FlorCreateDto> CreateAsync(FlorCreateDto dto)
         {
+            var flor = new FlorCreateDto
+            {
+                Nombre = dto.Nombre,
+                Color = dto.Color,
+                Precio = dto.Precio,
+                Stock = dto.Stock,
+                //FechaCreacion = DateTime.Now, // o DateTime.UtcNow
+            };
+
             if (_connection.State != System.Data.ConnectionState.Open)
             {
                 _connection.Open();
             }
 
-            using var command = _connection.CreateCommand();
-            command.CommandText = "INSERT INTO flores (nombre, color, precio, en_stock) " +
-                                  "VALUES ($nombre, $color, $precio, 1);";
-            command.Parameters.AddWithValue("$nombre", flor.Nombre);
-            command.Parameters.AddWithValue("$color", flor.Color);
-            command.Parameters.AddWithValue("$precio", flor.Precio);
-            command.Parameters.AddWithValue("$en_stock", flor.EnStock);
-            command.ExecuteNonQuery();
+            await using var transaction = (SqliteTransaction)await _connection.BeginTransactionAsync();
 
-            command.CommandText = "SELECT last_insert_rowid();";
-            var lastIdObj = command.ExecuteScalar();
-            var id = Convert.ToInt32((long)lastIdObj!);
-            flor.Id = (int)id;
+            try
+            {
+                await using var command = _connection.CreateCommand();
+                command.Transaction = transaction;
 
-            return Task.FromResult(flor);
+                command.CommandText = @"
+                    INSERT INTO flores (nombre, color, precio, stock)
+                    VALUES ($nombre, $color, $precio, $stock);
+                ";
+
+                command.Parameters.AddWithValue("$nombre", flor.Nombre);
+                command.Parameters.AddWithValue("$color", flor.Color);
+                command.Parameters.AddWithValue("$precio", flor.Precio);
+                command.Parameters.AddWithValue("$stock", flor.Stock);
+
+                await command.ExecuteNonQueryAsync();
+
+                // Obtener el ID generado
+                command.CommandText = "SELECT last_insert_rowid();";
+                var id = Convert.ToInt32(await command.ExecuteScalarAsync());
+
+                flor.Id = id;
+
+                await transaction.CommitAsync();
+
+                return flor;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public Task<bool> DeleteAsync(int id)
