@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Services;
 
@@ -49,7 +50,11 @@ namespace ServidorTiendaDotNet.Controllers
 
             if (nuevaFlor.Imagen is FormFile imagen)
             {
-                var rutaImagen = Path.Combine("wwwroot", "images", $"{florCreada.Id}.jpg");
+                var imagesDir = Path.Combine("wwwroot", "images");
+                // Aseguramos que el directorio exista antes de guardar la imagen
+                Directory.CreateDirectory(imagesDir);
+
+                var rutaImagen = Path.Combine(imagesDir, $"{florCreada.Id}.jpg");
                 using var stream = new FileStream(rutaImagen, FileMode.Create);
                 await imagen.CopyToAsync(stream);
                 await stream.FlushAsync();
@@ -59,6 +64,42 @@ namespace ServidorTiendaDotNet.Controllers
                 nameof(GetById), 
                 new { id = florCreada.Id }, 
                 florCreada);
+        }
+
+        [Consumes("multipart/form-data")]
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Update(int id, [FromForm] FlorUpdateDto florActualizada)
+        {
+            var exito = await _florService.UpdateAsync(id, florActualizada);
+
+            if (!exito)
+                return NotFound();
+
+            if (florActualizada.Imagen is FormFile imagen)
+            {
+                var imagesDir = Path.Combine("wwwroot", "images");
+                // Aseguramos que el directorio exista antes de guardar la imagen
+                Directory.CreateDirectory(imagesDir);
+
+                var rutaImagen = Path.Combine(imagesDir, $"{id}.jpg");
+                using var stream = new FileStream(rutaImagen, FileMode.Create);
+                await imagen.CopyToAsync(stream);
+                await stream.FlushAsync();
+            }
+
+            // Actualización correcta, sin necesidad de devolver contenido
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var exito = await _florService.DeleteAsync(id);
+
+            if (!exito)
+                return NotFound();
+
+            return NoContent();
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
+using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Models;
 
 namespace ServidorTiendaDotNet.Services
@@ -22,7 +23,8 @@ namespace ServidorTiendaDotNet.Services
             }
 
             using var command = _connection.CreateCommand();
-            command.CommandText = "SELECT id, nombre, color, precio, stock FROM flores;";
+            command.CommandText = "SELECT id, nombre, color, precio, stock FROM flores " +
+                "WHERE activo = 1;";
             await using var reader = await command.ExecuteReaderAsync();
 
             while (reader.Read())
@@ -119,14 +121,61 @@ namespace ServidorTiendaDotNet.Services
             }
         }
 
-        public Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                await _connection.OpenAsync();
+            }
+
+            // Verificar existencia del id
+            await using (var checkCommand = _connection.CreateCommand())
+            {
+                checkCommand.CommandText = "SELECT COUNT(1) FROM flores WHERE id = $id;";
+                checkCommand.Parameters.AddWithValue("$id", id);
+
+                var result = await checkCommand.ExecuteScalarAsync();
+                var count = Convert.ToInt32(result ?? 0);
+
+                if (count == 0)
+                {
+                    return false; // El id no existe
+                }
+            }
+
+            // Proceder a eliminar
+            await using var command = _connection.CreateCommand();
+            command.CommandText = "UPDATE flores SET activo = 0 WHERE id = $id;";
+            command.Parameters.AddWithValue("$id", id);
+            var rowsAffected = await command.ExecuteNonQueryAsync();
+
+            return rowsAffected > 0;
         }
 
-        public Task<bool> UpdateAsync(int id, Flor flor)
+        public async Task<bool> UpdateAsync(int id, FlorUpdateDto flor)
         {
-            throw new NotImplementedException();
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                await _connection.OpenAsync();
+            }
+
+            await using var command = _connection.CreateCommand();
+            command.CommandText = @"
+                UPDATE flores
+                SET nombre = $nombre,
+                    color = $color,
+                    precio = $precio,
+                    stock = $stock
+                WHERE id = $id;
+            ";
+            command.Parameters.AddWithValue("$nombre", flor.Nombre);
+            command.Parameters.AddWithValue("$color", flor.Color);
+            command.Parameters.AddWithValue("$precio", flor.Precio);
+            command.Parameters.AddWithValue("$stock", flor.Stock);
+            command.Parameters.AddWithValue("$id", id);
+            var rowsAffected = await command.ExecuteNonQueryAsync();
+
+            return rowsAffected > 0;
         }
     }
 }
