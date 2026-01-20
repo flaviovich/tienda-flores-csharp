@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Extensions;
 using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Services;
@@ -42,22 +43,22 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateOrder(Pedido pedido)
+        public async Task<IActionResult> CreateOrder(PedidoCreateDto pedido)
         {
             _logger.LogInformation("Petición para registrar pedido recibida");
 
-            List<Carrito>? carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
+            List<CarritoResponse>? carrito = HttpContext.Session.GetObjectFromJson<List<CarritoResponse>>("Carrito");
 
             if (carrito == null || !carrito.Any())
             {
                 return BadRequest("El carrito está vacío. No se puede registrar el pedido.");
             }
 
-            List<Pedido>? pedidos = HttpContext.Session.GetObjectFromJson<List<Pedido>>("Pedidos");
+            List<PedidoCreateDto>? pedidos = HttpContext.Session.GetObjectFromJson<List<PedidoCreateDto>>("Pedidos");
 
             if (pedidos == null)
             {
-                pedidos = new List<Pedido>();
+                pedidos = new List<PedidoCreateDto>();
             }
             pedidos.Add(pedido);
 

@@ -1,4 +1,5 @@
-﻿using ServidorTiendaDotNet.Models;
+﻿using ServidorTiendaDotNet.DTOs;
+using ServidorTiendaDotNet.Models;
 
 namespace ServidorTiendaDotNet.Services
 {
@@ -6,7 +7,7 @@ namespace ServidorTiendaDotNet.Services
     {
         Task<List<Pedido>> GetAllAsync();
         Task<Pedido> GetByIdAsync(int id);
-        Task<Pedido> CreateAsync(Pedido pedido, Carrito carrito);
+        Task<PedidoResponse> CreateAsync(PedidoCreateDto pedido, CarritoResponse carrito);
         Task<int> GetCount();
     }
 }

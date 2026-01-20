@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
+using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Models;
 
 namespace ServidorTiendaDotNet.Services
@@ -23,8 +24,8 @@ namespace ServidorTiendaDotNet.Services
 
             using var command = _connection.CreateCommand();
             command.CommandText = "SELECT id, fecha, nombre_cliente, direccion_envio, telefono, email, " +
-                "numero_tarjeta, estado " +
-                "FROM pedidos;";
+                                  "numero_tarjeta, estado " +
+                                  "FROM pedidos;";
             await using var reader = await command.ExecuteReaderAsync();
 
             while (reader.Read())
@@ -42,13 +43,22 @@ namespace ServidorTiendaDotNet.Services
             return pedidos;
         }
 
-        public async Task<Pedido> CreateAsync(Pedido pedido, Carrito carrito)
+        public async Task<PedidoResponse> CreateAsync(PedidoCreateDto pedido, CarritoResponse carrito)
         {
             if (_connection.State != System.Data.ConnectionState.Open)
             {
                 await _connection.OpenAsync();
             }
 
+            var pedidoNew = new PedidoResponse
+            {
+                Cliente = pedido.Cliente,
+                Telefono = pedido.Telefono,
+                Email = pedido.Email,
+                NumeroTarjeta = pedido.NumeroTarjeta,
+                DireccionEnvio = pedido.DireccionEnvio
+            };
+            
             using var transaction = await _connection.BeginTransactionAsync();
             using (var command = _connection.CreateCommand())
             {
@@ -69,7 +79,7 @@ namespace ServidorTiendaDotNet.Services
                 {
                     lastIdCommand.CommandText = "SELECT last_insert_rowid();";
                     var result = await lastIdCommand.ExecuteScalarAsync();
-                    pedido.Id = Convert.ToInt32(result);
+                    pedidoNew.Id = Convert.ToInt32(result);
                 }
 
                 // Insertar los detalles del pedido y calcular el total
@@ -81,13 +91,13 @@ namespace ServidorTiendaDotNet.Services
                         INSERT INTO pedido_detalles (pedido_id, flor_id, cantidad, precio_unitario)
                         VALUES ($pedido_id, $flor_id, $cantidad, $precio_unitario);
                     ";
-                    detalleCommand.Parameters.AddWithValue("$pedido_id", pedido.Id);
-                    detalleCommand.Parameters.AddWithValue("$flor_id", item.Flor.Id);
+                    detalleCommand.Parameters.AddWithValue("$pedido_id", pedidoNew.Id);
+                    detalleCommand.Parameters.AddWithValue("$flor_id", item.FlorId);
                     detalleCommand.Parameters.AddWithValue("$cantidad", item.Cantidad);
-                    detalleCommand.Parameters.AddWithValue("$precio_unitario", item.Flor.Precio);
+                    detalleCommand.Parameters.AddWithValue("$precio_unitario", item.PrecioUnitario);
                     await detalleCommand.ExecuteNonQueryAsync();
 
-                    total += item.Cantidad * item.Flor.Precio;
+                    total += item.Cantidad * item.PrecioUnitario;
                 }
 
                 // Actualizar el total del pedido
@@ -98,12 +108,13 @@ namespace ServidorTiendaDotNet.Services
                     WHERE id = $pedido_id;
                 ";
                 updatePedidoCommand.Parameters.AddWithValue("$total", total);
-                updatePedidoCommand.Parameters.AddWithValue("$pedido_id", pedido.Id);
+                updatePedidoCommand.Parameters.AddWithValue("$pedido_id", pedidoNew.Id);
                 await updatePedidoCommand.ExecuteNonQueryAsync();
             }
+
             await transaction.CommitAsync();
 
-            return pedido;
+            return pedidoNew;
         }
 
         Task<int> IPedidoService.GetCount()
