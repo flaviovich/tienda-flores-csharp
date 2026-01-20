@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Reflection;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.OpenApi.Models;
 using ServidorTiendaDotNet.Services;
 
@@ -69,6 +71,11 @@ builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
 builder.Services.AddScoped<IPedidoDetalleService, PedidoDetalleService>();
 
+
+var cultureInfo = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -83,7 +90,20 @@ app.UseSession();
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+// Configurar archivos estáticos con control de caché
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Solo aplicar no-cache a las imágenes en /images
+        if (ctx.File.PhysicalPath?.Contains("images") == true)
+        {
+            ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+            ctx.Context.Response.Headers.Append("Pragma", "no-cache");
+            ctx.Context.Response.Headers.Append("Expires", "0");
+        }
+    }
+});
 
 app.UseAuthorization();
 

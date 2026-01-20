@@ -18,6 +18,29 @@ namespace ServidorTiendaDotNet.Controllers
             _pedidoService = pedido;
         }
 
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<Pedido>>> GetAll()
+        {
+            _logger.LogInformation("Se ha recibido una petición a /api/flores");
+            var flores = await _pedidoService.GetAllAsync();
+
+            return Ok(flores);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Pedido>> GetById(int id)
+        {
+            var pedido=await _pedidoService.GetByIdAsync(id);
+
+            if (pedido == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(pedido);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateOrder(Pedido pedido)
         {

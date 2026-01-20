@@ -12,6 +12,36 @@ namespace ServidorTiendaDotNet.Services
             _connection = connection;
         }
 
+        public async Task<List<Pedido>> GetAllAsync()
+        {
+            var pedidos = new List<Pedido>();
+
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                await _connection.OpenAsync();
+            }
+
+            using var command = _connection.CreateCommand();
+            command.CommandText = "SELECT id, fecha, nombre_cliente, direccion_envio, telefono, email, " +
+                "numero_tarjeta, estado " +
+                "FROM pedidos;";
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (reader.Read())
+            {
+                var item = new Pedido();
+                item.Id = reader.GetInt32(0);
+                item.Cliente = reader.GetString(1);
+                item.Telefono = reader.GetString(2);
+                item.Email = reader.GetString(3);
+                item.NumeroTarjeta = reader.GetString(4);
+                item.DireccionEnvio = reader.GetString(5);
+                pedidos.Add(item);
+            }
+
+            return pedidos;
+        }
+
         public async Task<Pedido> CreateAsync(Pedido pedido, Carrito carrito)
         {
             if (_connection.State != System.Data.ConnectionState.Open)
@@ -26,7 +56,7 @@ namespace ServidorTiendaDotNet.Services
                     INSERT INTO pedidos (nombre_cliente, direccion_envio, telefono, email, numero_tarjeta)
                     VALUES ($cliente, $direccion_envio, $telefono, $email, $numero_tarjeta);
                 ";
-                
+
                 command.Parameters.AddWithValue("$cliente", pedido.Cliente);
                 command.Parameters.AddWithValue("$direccion_envio", pedido.DireccionEnvio);
                 command.Parameters.AddWithValue("$telefono", pedido.Telefono);
@@ -77,6 +107,11 @@ namespace ServidorTiendaDotNet.Services
         }
 
         Task<int> IPedidoService.GetCount()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Pedido> GetByIdAsync(int id)
         {
             throw new NotImplementedException();
         }

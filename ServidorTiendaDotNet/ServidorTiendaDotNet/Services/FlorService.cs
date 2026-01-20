@@ -23,7 +23,8 @@ namespace ServidorTiendaDotNet.Services
             }
 
             using var command = _connection.CreateCommand();
-            command.CommandText = "SELECT id, nombre, color, precio, stock FROM flores " +
+            command.CommandText = "SELECT id, nombre, color, precio, stock, fecha_actualizacion " +
+                "FROM flores " +
                 "WHERE activo = 1;";
             await using var reader = await command.ExecuteReaderAsync();
 
@@ -35,6 +36,7 @@ namespace ServidorTiendaDotNet.Services
                 flor.Color = reader.GetString(2);
                 flor.Precio = reader.GetDecimal(3);
                 flor.Stock = reader.GetInt32(4);
+                flor.FechaActualizacion = reader.IsDBNull(5) ? null : reader.GetString(5);
                 flores.Add(flor);
             }
 
@@ -165,7 +167,8 @@ namespace ServidorTiendaDotNet.Services
                 SET nombre = $nombre,
                     color = $color,
                     precio = $precio,
-                    stock = $stock
+                    stock = $stock,
+                    fecha_actualizacion = CURRENT_TIMESTAMP
                 WHERE id = $id;
             ";
             command.Parameters.AddWithValue("$nombre", flor.Nombre);

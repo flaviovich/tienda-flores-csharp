@@ -7,4 +7,5 @@ public class FlorResponse
     public string Color { get; set; } = string.Empty;
     public decimal Precio { get; set; }
     public int Stock { get; set; }
+    public string FechaActualizacion { get; set; } = string.Empty;
 }
