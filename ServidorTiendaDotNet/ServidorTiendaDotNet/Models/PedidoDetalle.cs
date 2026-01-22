@@ -16,6 +16,8 @@ namespace ServidorTiendaDotNet.Models
         public int Cantidad { get; set; }
 
         [JsonPropertyName("precioUnitario")]
-        public decimal PrecioUnitario { get; set; }
+        public decimal PrecioUnitario { get; set; } = decimal.Zero;
+        //public Pedido pedido { get; set; }
+        //public List<CarritoItem> Items { get; set; } = new List<CarritoItem>();
     }
 }

@@ -135,9 +135,32 @@ namespace ServidorTiendaDotNet.Services
             throw new NotImplementedException();
         }
 
-        public Task<PedidoResponse> GetByIdAsync(int id)
+        public async Task<PedidoResponse?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                await _connection.OpenAsync();
+            }
+
+            using var command = _connection.CreateCommand();
+            command.CommandText = "SELECT id, nombre_cliente, telefono, fecha, estado, total " +
+                                  "FROM pedidos WHERE id = $id;";
+            command.Parameters.AddWithValue("$id", id);
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                var item = new PedidoResponse();
+                item.Id = reader.GetInt32(0);
+                item.Cliente = reader.GetString(1);
+                item.Telefono = reader.GetString(2);
+                item.Fecha = reader.GetDateTime(3);
+                item.Estado = reader.GetString(4);
+                item.Total = reader.GetDecimal(5);
+                return item;
+            }
+
+            return null;
         }
     }
 }

@@ -56,7 +56,7 @@ namespace ServidorTiendaDotNet.Services
             command.Parameters.AddWithValue("$id", id);
             await using var reader = await command.ExecuteReaderAsync();
 
-            if (reader.Read())
+            if (await reader.ReadAsync())
             {
                 var flor = new FlorResponse();
                 flor.Id = reader.GetInt32(0);

@@ -21,7 +21,7 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpGet]
-        public ActionResult<CarritoResponse> GetCart()
+        public ActionResult<CarritoResponse> GetCarrito()
         {
             _logger.LogInformation("Se ha recibido una petición para obtener el carrito.");
 
@@ -32,7 +32,7 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpDelete]
-        public IActionResult DeleteCart()
+        public IActionResult DeleteCarrito()
         {
             _logger.LogInformation("Petición para vaciar el carrito recibida");
 
@@ -49,7 +49,7 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpPost("items")]
-        public async Task<ActionResult<CarritoResponse>> AddCartItem([FromBody] AddCartItemDto dto)
+        public async Task<ActionResult<CarritoResponse>> AddCarritoItem([FromBody] AddCartItemDto dto)
         {
             _logger.LogInformation("Petición para agregar al carrito recibida");
 

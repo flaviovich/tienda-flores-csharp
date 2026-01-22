@@ -30,7 +30,7 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Pedido>> GetById(int id)
+        public async Task<ActionResult<PedidoResponse>> GetById(int id)
         {
             var pedido=await _pedidoService.GetByIdAsync(id);
 
@@ -43,7 +43,7 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateOrder(PedidoCreateDto pedido)
+        public async Task<IActionResult> CreatePedido(PedidoCreateDto pedido)
         {
             _logger.LogInformation("Petición para registrar pedido recibida");
 
@@ -69,5 +69,12 @@ namespace ServidorTiendaDotNet.Controllers
 
             return Ok(new { mensaje = "Pedido registrado exitosamente", id = pedidoNew.Id });
         }
+
+        //[HttpGet("{id}")]
+        //public PedidoDetalle ObtenerDetallesPedido(int pedidoId)
+        //{
+        //    PedidoDetalle detallePedido = new PedidoDetalle();
+        //    detallePedido.pedido = _pedidoService.GetById(pedidoId).Result;
+        //}
     }
 }
