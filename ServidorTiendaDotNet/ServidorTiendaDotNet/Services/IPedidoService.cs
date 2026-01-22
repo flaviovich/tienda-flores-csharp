@@ -5,8 +5,8 @@ namespace ServidorTiendaDotNet.Services
 {
     public interface IPedidoService
     {
-        Task<List<Pedido>> GetAllAsync();
-        Task<Pedido> GetByIdAsync(int id);
+        Task<List<PedidoResponse>> GetAllAsync();
+        Task<PedidoResponse> GetByIdAsync(int id);
         Task<PedidoResponse> CreateAsync(PedidoCreateDto pedido, CarritoResponse carrito);
         Task<int> GetCount();
     }

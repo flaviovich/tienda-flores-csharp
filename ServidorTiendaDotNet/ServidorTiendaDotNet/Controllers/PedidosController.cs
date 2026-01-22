@@ -21,9 +21,9 @@ namespace ServidorTiendaDotNet.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Pedido>>> GetAll()
+        public async Task<ActionResult<IEnumerable<PedidoResponse>>> GetAll()
         {
-            _logger.LogInformation("Se ha recibido una petición a /api/flores");
+            _logger.LogInformation("Se ha recibido una petición a /api/pedidos");
             var flores = await _pedidoService.GetAllAsync();
 
             return Ok(flores);

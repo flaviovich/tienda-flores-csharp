@@ -13,9 +13,9 @@ namespace ServidorTiendaDotNet.Services
             _connection = connection;
         }
 
-        public async Task<List<Pedido>> GetAllAsync()
+        public async Task<List<PedidoResponse>> GetAllAsync()
         {
-            var pedidos = new List<Pedido>();
+            var pedidos = new List<PedidoResponse>();
 
             if (_connection.State != System.Data.ConnectionState.Open)
             {
@@ -23,20 +23,19 @@ namespace ServidorTiendaDotNet.Services
             }
 
             using var command = _connection.CreateCommand();
-            command.CommandText = "SELECT id, fecha, nombre_cliente, direccion_envio, telefono, email, " +
-                                  "numero_tarjeta, estado " +
+            command.CommandText = "SELECT id, nombre_cliente, telefono, fecha, estado, total " +
                                   "FROM pedidos;";
             await using var reader = await command.ExecuteReaderAsync();
 
             while (reader.Read())
             {
-                var item = new Pedido();
+                var item = new PedidoResponse();
                 item.Id = reader.GetInt32(0);
                 item.Cliente = reader.GetString(1);
                 item.Telefono = reader.GetString(2);
-                item.Email = reader.GetString(3);
-                item.NumeroTarjeta = reader.GetString(4);
-                item.DireccionEnvio = reader.GetString(5);
+                item.Fecha = reader.GetDateTime(3);
+                item.Estado = reader.GetString(4);
+                item.Total = reader.GetDecimal(5);
                 pedidos.Add(item);
             }
 
@@ -50,7 +49,7 @@ namespace ServidorTiendaDotNet.Services
                 await _connection.OpenAsync();
             }
 
-            var pedidoNew = new PedidoResponse
+            var pedidoNew = new Pedido
             {
                 Cliente = pedido.Cliente,
                 Telefono = pedido.Telefono,
@@ -59,6 +58,7 @@ namespace ServidorTiendaDotNet.Services
                 DireccionEnvio = pedido.DireccionEnvio
             };
             
+            decimal total = 0;
             using var transaction = await _connection.BeginTransactionAsync();
             using (var command = _connection.CreateCommand())
             {
@@ -83,7 +83,6 @@ namespace ServidorTiendaDotNet.Services
                 }
 
                 // Insertar los detalles del pedido y calcular el total
-                decimal total = 0;
                 foreach (var item in carrito.Items)
                 {
                     using var detalleCommand = _connection.CreateCommand();
@@ -100,6 +99,9 @@ namespace ServidorTiendaDotNet.Services
                     total += item.Cantidad * item.PrecioUnitario;
                 }
 
+                // Redondeo a 2 decimales (estándar monetario)
+                total = Math.Round(total, 2, MidpointRounding.AwayFromZero);
+                
                 // Actualizar el total del pedido
                 using var updatePedidoCommand = _connection.CreateCommand();
                 updatePedidoCommand.CommandText = @"
@@ -114,7 +116,18 @@ namespace ServidorTiendaDotNet.Services
 
             await transaction.CommitAsync();
 
-            return pedidoNew;
+            // Mapear Pedido → PedidoResponse
+            var response = new PedidoResponse
+            {
+                Id = pedidoNew.Id,
+                Cliente = pedidoNew.Cliente,
+                Telefono = pedidoNew.Telefono,
+                Fecha = pedidoNew.FechaCreacion,
+                Estado = pedidoNew.Estado.ToString(),
+                Total = total,
+            };
+
+            return response;
         }
 
         Task<int> IPedidoService.GetCount()
@@ -122,7 +135,7 @@ namespace ServidorTiendaDotNet.Services
             throw new NotImplementedException();
         }
 
-        public Task<Pedido> GetByIdAsync(int id)
+        public Task<PedidoResponse> GetByIdAsync(int id)
         {
             throw new NotImplementedException();
         }
