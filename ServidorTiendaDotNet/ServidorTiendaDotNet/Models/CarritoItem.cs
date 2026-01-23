@@ -1,3 +1,4 @@
+using ServidorTiendaDotNet.DTOs;
 using System.Text.Json.Serialization;
 
 namespace ServidorTiendaDotNet.Models

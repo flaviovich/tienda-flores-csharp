@@ -7,10 +7,12 @@ namespace ServidorTiendaDotNet.Services
     public class PedidoService : IPedidoService
     {
         readonly SqliteConnection _connection;
+        readonly IFlorService _florService;
 
-        public PedidoService(SqliteConnection connection)
+        public PedidoService(SqliteConnection connection, IFlorService florService)
         {
             _connection = connection;
+            _florService = florService;
         }
 
         public async Task<List<PedidoResponse>> GetAllAsync()
@@ -42,6 +44,43 @@ namespace ServidorTiendaDotNet.Services
             return pedidos;
         }
 
+        public async Task<PedidoCarritoResponse> GetPedidoItemByIdAsync(int pedidoId)
+        {
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                await _connection.OpenAsync();
+            }
+
+            using var command = _connection.CreateCommand();
+
+            var pedido = await GetByIdAsync(pedidoId);
+            var detalle = await GetPedidoDetalleByIdAsync(pedidoId);
+
+            command.CommandText = @"
+                SELECT sum(cantidad)cantidad, (cantidad*precio_unitario)total
+                FROM pedido_detalles 
+                WHERE pedido_id = $pedidoId;
+            ";
+            command.Parameters.AddWithValue("$pedidoId", pedidoId);
+            await using var reader = await command.ExecuteReaderAsync();
+
+            int cantidad = 0;
+            decimal total = 0;
+            if (reader.Read())
+            {
+                cantidad = reader.GetInt32(0);
+                total = reader.GetDecimal(1);
+            }
+            var pedidoCarritoResponse = new PedidoCarritoResponse
+            {
+                Pedido = pedido!,
+                Items = detalle,
+                Cantidad = (int)cantidad,
+                Total = total
+            };
+            return pedidoCarritoResponse;
+        }
+
         public async Task<PedidoResponse?> GetByIdAsync(int pedidoId)
         {
             if (_connection.State != System.Data.ConnectionState.Open)
@@ -69,8 +108,8 @@ namespace ServidorTiendaDotNet.Services
 
             return null;
         }
-        
-        public async Task<PedidoResponse> CreateAsync(PedidoCreateDto pedido, CarritoResponse carrito)
+
+        public async Task<PedidoResponse> PedidoCreateAsync(PedidoCreateDto pedido, CarritoResponse carrito)
         {
             if (_connection.State != System.Data.ConnectionState.Open)
             {
@@ -85,7 +124,7 @@ namespace ServidorTiendaDotNet.Services
                 NumeroTarjeta = pedido.NumeroTarjeta,
                 DireccionEnvio = pedido.DireccionEnvio
             };
-            
+
             decimal total = 0;
             using var transaction = await _connection.BeginTransactionAsync();
             using (var command = _connection.CreateCommand())
@@ -129,7 +168,7 @@ namespace ServidorTiendaDotNet.Services
 
                 // Redondeo a 2 decimales (estándar monetario)
                 total = Math.Round(total, 2, MidpointRounding.AwayFromZero);
-                
+
                 // Actualizar el total del pedido
                 using var updatePedidoCommand = _connection.CreateCommand();
                 updatePedidoCommand.CommandText = @"
@@ -156,6 +195,34 @@ namespace ServidorTiendaDotNet.Services
             };
 
             return response;
+        }
+
+        public async Task<List<FlorCarrito>> GetPedidoDetalleByIdAsync(int pedidoId)
+        {
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                await _connection.OpenAsync();
+            }
+            var detalles = new List<FlorCarrito>();
+            using var command = _connection.CreateCommand();
+            command.CommandText = @"
+                SELECT flor_id, cantidad
+                FROM pedido_detalles
+                WHERE pedido_id = $pedidoId;
+            ";
+            command.Parameters.AddWithValue("$pedidoId", pedidoId);
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var flor = await _florService.GetByIdAsync(reader.GetInt32(0));
+                var detalle = new FlorCarrito
+                {
+                    Flor = flor,
+                    Cantidad = reader.GetInt32(1),
+                };
+                detalles.Add(detalle);
+            }
+            return detalles;
         }
     }
 }

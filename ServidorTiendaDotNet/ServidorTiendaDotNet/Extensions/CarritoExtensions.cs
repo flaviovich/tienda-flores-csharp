@@ -1,3 +1,4 @@
+using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Models;
 
 namespace ServidorTiendaDotNet.Extensions

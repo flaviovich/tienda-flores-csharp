@@ -1,6 +1,6 @@
-﻿namespace ServidorTiendaDotNet.Models
+﻿namespace ServidorTiendaDotNet.DTOs
 {
-    public class AddCartItemDto
+    public class CarritoItemDto
     {
         public int FlorId { get; set; }
         public int Cantidad { get; set; } = 1;

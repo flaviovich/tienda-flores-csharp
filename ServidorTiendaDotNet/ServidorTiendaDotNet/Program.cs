@@ -65,7 +65,7 @@ builder.Services.AddScoped(sp =>
     return new Microsoft.Data.Sqlite.SqliteConnection(connString);
 });
 
-// Inyecci�n de dependencia para el servicio de flores
+// Inyección de dependencia para el servicio de flores
 builder.Services.AddScoped<IFlorService, FlorService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();

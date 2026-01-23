@@ -1,11 +1,12 @@
-namespace ServidorTiendaDotNet.Models;
-
-public class FlorResponse
+namespace ServidorTiendaDotNet.DTOs
 {
-    public int Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
-    public decimal Precio { get; set; }
-    public int Stock { get; set; }
-    public string FechaActualizacion { get; set; } = string.Empty;
+    public class FlorResponse
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public decimal Precio { get; set; }
+        public int Stock { get; set; }
+        public string FechaActualizacion { get; set; } = string.Empty;
+    }
 }

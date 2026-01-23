@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Extensions;
-using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Services;
 
 namespace ServidorTiendaDotNet.Controllers
@@ -29,21 +28,21 @@ namespace ServidorTiendaDotNet.Controllers
             return Ok(flores);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PedidoResponse>> GetById(int id)
-        {
-            var pedido=await _pedidoService.GetByIdAsync(id);
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<PedidoResponse>> GetById(int id)
+        //{
+        //    var pedido=await _pedidoService.GetByIdAsync(id);
 
-            if (pedido == null)
-            {
-                return NotFound();
-            }
+        //    if (pedido == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return Ok(pedido);
-        }
+        //    return Ok(pedido);
+        //}
 
         [HttpPost]
-        public async Task<IActionResult> CreatePedido(PedidoCreateDto pedido)
+        public async Task<IActionResult> Create(PedidoCreateDto pedido)
         {
             _logger.LogInformation("Petición para registrar pedido recibida");
 
@@ -65,16 +64,17 @@ namespace ServidorTiendaDotNet.Controllers
             HttpContext.Session.SetObjectAsJson("Pedidos", pedidos);
             HttpContext.Session.Remove("Carrito");
 
-            var pedidoNew = await _pedidoService.CreateAsync(pedido, carrito.First());
+            var pedidoNew = await _pedidoService.PedidoCreateAsync(pedido, carrito.First());
 
             return Ok(new { mensaje = "Pedido registrado exitosamente", id = pedidoNew.Id });
         }
 
-        //[HttpGet("{id}")]
-        //public PedidoDetalle ObtenerDetallesPedido(int pedidoId)
-        //{
-        //    PedidoDetalle detallePedido = new PedidoDetalle();
-        //    detallePedido.pedido = _pedidoService.GetById(pedidoId).Result;
-        //}
+        [HttpGet("items/{id}")]
+        public async Task<ActionResult<PedidoItemResponse>> GetPedidoItemById(int id)
+        {
+            var detalle = await _pedidoService.GetPedidoItemByIdAsync(id);
+            
+            return Ok(detalle);
+        }
     }
 }

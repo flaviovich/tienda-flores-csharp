@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Extensions;
 using ServidorTiendaDotNet.Models;
 using ServidorTiendaDotNet.Services;
@@ -49,7 +50,7 @@ namespace ServidorTiendaDotNet.Controllers
         }
 
         [HttpPost("items")]
-        public async Task<ActionResult<CarritoResponse>> AddCarritoItem([FromBody] AddCartItemDto dto)
+        public async Task<ActionResult<CarritoResponse>> CreateCarritoItem([FromBody] CarritoItemDto dto)
         {
             _logger.LogInformation("Petición para agregar al carrito recibida");
 
