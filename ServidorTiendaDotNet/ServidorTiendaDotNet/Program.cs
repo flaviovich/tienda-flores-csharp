@@ -69,7 +69,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<IFlorService, FlorService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
-builder.Services.AddScoped<IPedidoDetalleService, PedidoDetalleService>();
+builder.Services.AddScoped<IPedidoItemService, PedidoItemService>();
 
 
 var cultureInfo = CultureInfo.InvariantCulture;
