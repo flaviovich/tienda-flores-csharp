@@ -14,22 +14,47 @@ namespace ServidorTiendaDotNet.Controllers
         readonly ILogger<CarritoController> _logger;
         readonly IFlorService _florService;
 
-        public CarritoController(ILogger<CarritoController> logger,
-            IFlorService florService)
+        public CarritoController(ILogger<CarritoController> logger, IFlorService florService)
         {
             _logger = logger;
             _florService = florService;
         }
 
         [HttpGet]
-        public ActionResult<CarritoResponse> GetCarrito()
+        public async Task<ActionResult<CarritoResponse>> GetCarrito()
         {
-            _logger.LogInformation("Se ha recibido una petición para obtener el carrito.");
+            _logger.LogInformation("Petición para obtener carrito");
 
-            var carrito = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito")?
-                .FirstOrDefault() ?? new Carrito { Id = 1 };
+            // Leer el mismo tipo que se guarda en POST
+            var items = HttpContext.Session.GetObjectFromJson<List<CarritoItemDto>>("Carrito")
+                        ?? new List<CarritoItemDto>();
 
-            return Ok(carrito.ToResponse());
+            var response = new CarritoResponse
+            {
+                Items = new List<CarritoItemResponse>(),
+                TotalItems = 0,
+                Total = 0m
+            };
+
+            foreach (var itemDto in items)
+            {
+                var flor = await _florService.GetByIdAsync(itemDto.FlorId);
+                if (flor == null) continue;
+
+                var itemResponse = new CarritoItemResponse
+                {
+                    FlorId = itemDto.FlorId,
+                    Nombre = flor.Nombre,
+                    PrecioUnitario = flor.Precio,
+                    Cantidad = itemDto.Cantidad,
+                };
+
+                response.Items.Add(itemResponse);
+                response.TotalItems += itemDto.Cantidad;
+                response.Total += itemDto.Cantidad * flor.Precio;
+            }
+
+            return Ok(response);
         }
 
         [HttpDelete]
@@ -52,58 +77,67 @@ namespace ServidorTiendaDotNet.Controllers
         [HttpPost("items")]
         public async Task<ActionResult<CarritoResponse>> CreateCarritoItem([FromBody] CarritoItemDto dto)
         {
-            _logger.LogInformation("Petición para agregar al carrito recibida");
-
-            if (dto == null)
+            if (dto == null || dto.FlorId <= 0 || dto.Cantidad < 1)
             {
-                return BadRequest("No se recibió ningún dato en el body");
+                return BadRequest("Datos inválidos");
             }
 
-            // Extraer datos del DTO
-            int florId = dto.FlorId;
+            // Recuperar o inicializar la lista
+            var carritoList = HttpContext.Session.GetObjectFromJson<List<CarritoItemDto>>("Carrito")
+                              ?? new List<CarritoItemDto>();
 
-            if (florId <= 0)
+            // Buscar si ya existe el producto en el carrito
+            var itemExistente = carritoList.FirstOrDefault(x => x.FlorId == dto.FlorId);
+
+            if (itemExistente != null)
             {
-                return BadRequest("El identificador de la flor (florId) es obligatorio y debe ser mayor que 0");
-            }
-
-            if (dto.Cantidad < 1)
-            {
-                return BadRequest("La cantidad debe ser mayor o igual a 1");
-            }
-
-            // Buscar en la bd
-            var flor = await _florService.GetByIdAsync(florId);
-
-            if (flor == null)
-            {
-                return NotFound($"No se encontró la flor con id {florId}");
-            }
-
-            var carritoList = HttpContext.Session.GetObjectFromJson<List<Carrito>>("Carrito");
-            var carrito = carritoList?.FirstOrDefault() ?? new Carrito { Id = 1 };
-
-            var item = carrito.Items.FirstOrDefault(i => i.FlorId == flor.Id);
-
-            if (item == null)
-            {
-                var newItem = new CarritoItem
-                {
-                    FlorId = flor.Id,
-                    Flor = flor,
-                    Cantidad = dto.Cantidad,
-                    PrecioUnitario = flor.Precio
-                };
-                carrito.Items.Add(newItem);
+                // ya existe → incrementar cantidad
+                itemExistente.Cantidad += dto.Cantidad;
             }
             else
             {
-                item.Cantidad += dto.Cantidad;
+                // no existe → añadir nuevo ítem
+                var flor = await _florService.GetByIdAsync(dto.FlorId);
+                if (flor == null) return NotFound();
+
+                carritoList.Add(new CarritoItemDto
+                {
+                    FlorId = dto.FlorId,
+                    Cantidad = dto.Cantidad,
+                });
             }
 
-            HttpContext.Session.SetObjectAsJson("Carrito", new List<Carrito> { carrito });
+            // Guardar de nuevo en sesión
+            HttpContext.Session.SetObjectAsJson("Carrito", carritoList);
 
-            return Ok(carrito.ToResponse());
+            var response = new CarritoResponse
+            {
+                Items = new List<CarritoItemResponse>(),
+                TotalItems = 0,
+                Total = 0m,
+                Mensaje = "Producto añadido correctamente"
+            };
+
+            foreach (var itemDto in carritoList)
+            {
+                var flor = await _florService.GetByIdAsync(itemDto.FlorId);
+
+                if (flor == null) continue;
+
+                var itemResponse = new CarritoItemResponse
+                {
+                    FlorId = itemDto.FlorId,
+                    Nombre = flor.Nombre,
+                    PrecioUnitario = flor.Precio,
+                    Cantidad = itemDto.Cantidad,
+                };
+
+                response.Items.Add(itemResponse);
+                response.TotalItems += itemDto.Cantidad;
+                response.Total += itemDto.Cantidad * flor.Precio;
+            }
+
+            return Ok(response);
         }
     }
 }

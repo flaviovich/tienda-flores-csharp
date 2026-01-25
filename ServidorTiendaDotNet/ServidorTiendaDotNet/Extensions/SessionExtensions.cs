@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace ServidorTiendaDotNet.Extensions 
 {
     public static class SessionExtensions
     {
+
+        
         public static void SetObjectAsJson(this ISession session, string key, object value)
         {
             session.SetString(key, JsonSerializer.Serialize(value));

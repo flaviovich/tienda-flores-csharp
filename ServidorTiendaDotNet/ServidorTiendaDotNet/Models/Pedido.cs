@@ -19,7 +19,7 @@ public enum MetodoPagoTipo
     Tarjeta,
     PayPal,
     Transferencia,
-    ContraReembolso
+    Stripe
 }
 
 public class Pedido
@@ -45,11 +45,12 @@ public class Pedido
     [MinLength(10), MaxLength(250)]
     [JsonPropertyName("direccionEnvio")]
     public string DireccionEnvio { get; set; } = string.Empty;
+    public string CodigoPostal { get; set; } = string.Empty;
+    public string Ciudad { get; set; } = string.Empty;
 
     [Required]
     public MetodoPagoTipo MetodoPago { get; set; } = MetodoPagoTipo.Tarjeta;
     
-    [Required]
     [CreditCard]
     [StringLength(19, MinimumLength = 13)] // acepta espacios y diferentes longitudes
     public string NumeroTarjeta { get; set; } = string.Empty;
@@ -68,4 +69,5 @@ public class Pedido
     public string? Notas { get; set; }
     //public bool PagoConfirmado { get; set; }           // en vez de guardar tarjeta
     public DateTime? FechaPago { get; set; }
+    public string Tipo {get; set;} = string.Empty;   
 }

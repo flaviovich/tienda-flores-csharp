@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ServidorTiendaDotNet.Models;
 
 namespace ServidorTiendaDotNet.DTOs
 {
@@ -22,14 +23,20 @@ namespace ServidorTiendaDotNet.DTOs
         [MinLength(10, ErrorMessage = "La dirección debe tener al menos 10 caracteres")]
         [MaxLength(150)]
         public string DireccionEnvio { get; set; } = string.Empty;
+        public string CodigoPostal { get; set; } = string.Empty;
+        public string Ciudad { get; set; } = string.Empty;
 
         // ── Pago ───────────────────────────────────────────────
         [Required(ErrorMessage = "Se requiere un método de pago")]
         public string MetodoPago { get; set; } = "stripe"; // o "paypal", "tarjeta", "transferencia", etc.
 
-        [Required]
         [CreditCard]
         [StringLength(19, MinimumLength = 13)] // acepta espacios y diferentes longitudes
         public string NumeroTarjeta { get; set; } = string.Empty;
+        
+        public DateTime FechaEntrega {get; set;} = DateTime.Now;
+        public string Tipo { get; set; } = string.Empty;
+        public string NotasEnvio { get; set; } = string.Empty;
+        
     }
 }

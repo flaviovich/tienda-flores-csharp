@@ -1,19 +1,12 @@
-Usando la configuración de inicio de /home/flavio/Learning/Nelson/cfp-nelson-daw/2-curso/Cliente Servidor/ws-csharp/tienda-flores-csharp/ServidorTiendaDotNet/ServidorTiendaDotNet/Properties/launchSettings.json...
-Compilando...
-Unhandled exception. System.AggregateException: Some services are not able to be constructed (Error while validating the service descriptor 'ServiceType: ServidorTiendaDotNet.Services.IPedidoService Lifetime: Scoped ImplementationType: ServidorTiendaDotNet.Services.PedidoService': Unable to resolve service for type 'ServidorTiendaDotNet.Services.FlorService' while attempting to activate 'ServidorTiendaDotNet.Services.PedidoService'.)
- ---> System.InvalidOperationException: Error while validating the service descriptor 'ServiceType: ServidorTiendaDotNet.Services.IPedidoService Lifetime: Scoped ImplementationType: ServidorTiendaDotNet.Services.PedidoService': Unable to resolve service for type 'ServidorTiendaDotNet.Services.FlorService' while attempting to activate 'ServidorTiendaDotNet.Services.PedidoService'.
- ---> System.InvalidOperationException: Unable to resolve service for type 'ServidorTiendaDotNet.Services.FlorService' while attempting to activate 'ServidorTiendaDotNet.Services.PedidoService'.
-   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteFactory.CreateArgumentCallSites(ServiceIdentifier serviceIdentifier, Type implementationType, CallSiteChain callSiteChain, ParameterInfo[] parameters, Boolean throwIfCallSiteNotFound)
-   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteFactory.CreateConstructorCallSite(ResultCache lifetime, ServiceIdentifier serviceIdentifier, Type implementationType, CallSiteChain callSiteChain)
-   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteFactory.TryCreateExact(ServiceDescriptor descriptor, ServiceIdentifier serviceIdentifier, CallSiteChain callSiteChain, Int32 slot)
-   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteFactory.GetCallSite(ServiceDescriptor serviceDescriptor, CallSiteChain callSiteChain)
-   at Microsoft.Extensions.DependencyInjection.ServiceProvider.ValidateService(ServiceDescriptor descriptor)
-   --- End of inner exception stack trace ---
-   at Microsoft.Extensions.DependencyInjection.ServiceProvider.ValidateService(ServiceDescriptor descriptor)
-   at Microsoft.Extensions.DependencyInjection.ServiceProvider..ctor(ICollection`1 serviceDescriptors, ServiceProviderOptions options)
-   --- End of inner exception stack trace ---
-   at Microsoft.Extensions.DependencyInjection.ServiceProvider..ctor(ICollection`1 serviceDescriptors, ServiceProviderOptions options)
-   at Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(IServiceCollection services, ServiceProviderOptions options)
-   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
-   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
-   at Program.<Main>$(String[] args) in /home/flavio/Learning/Nelson/cfp-nelson-daw/2-curso/Cliente Servidor/ws-csharp/tienda-flores-csharp/ServidorTiendaDotNet/ServidorTiendaDotNet/Program.cs:line 79
+fail: ServidorTiendaDotNet.Controllers.PedidosController[0]
+      Error al crear pedido para cliente Juan Pérez García
+      Microsoft.Data.Sqlite.SqliteException (0x80004005): SQLite Error 19: 'FOREIGN KEY constraint failed'.
+         at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+         at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+         at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+         at System.Data.Common.DbCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+      --- End of stack trace from previous location ---
+         at ServidorTiendaDotNet.Services.PedidoService.PedidoCreateAsync(PedidoCreateDto pedido, CarritoResponse carrito) in /home/flavio/Learning/Nelson/cfp-nelson-daw/2-curso/Cliente Servidor/ws-csharp/tienda-flores-csharp/ServidorTiendaDotNet/ServidorTiendaDotNet/Services/PedidoService.cs:line 180
+         at ServidorTiendaDotNet.Controllers.PedidosController.Create(PedidoCreateDto pedido) in /home/flavio/Learning/Nelson/cfp-nelson-daw/2-curso/Cliente Servidor/ws-csharp/tienda-flores-csharp/ServidorTiendaDotNet/ServidorTiendaDotNet/Controllers/PedidosController.cs:line 61

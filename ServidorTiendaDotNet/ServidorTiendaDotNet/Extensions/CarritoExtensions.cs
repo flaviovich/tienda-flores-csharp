@@ -11,11 +11,11 @@ namespace ServidorTiendaDotNet.Extensions
 
             return new CarritoResponse
             {
-                Id = carrito.Id,
+                //Id = carrito.Id,
                 Items = carrito.Items.Select(item => new CarritoItemResponse
                 {
                     FlorId = item.FlorId,
-                    NombreFlor = item.Flor?.Nombre ?? "[Flor no cargada]",
+                    Nombre = item.Flor?.Nombre ?? "[Flor no cargada]",
                     PrecioUnitario = item.PrecioUnitario,
                     Cantidad = item.Cantidad
                 }).ToList()

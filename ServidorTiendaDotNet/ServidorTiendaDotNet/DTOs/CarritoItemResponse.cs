@@ -2,10 +2,20 @@ namespace ServidorTiendaDotNet.DTOs
 {
     public class CarritoItemResponse
     {
-        public int FlorId { get; init; }
-        public string NombreFlor { get; init; } = string.Empty;
-        public decimal PrecioUnitario { get; init; }
-        public int Cantidad { get; init; }
-        public decimal Subtotal => PrecioUnitario * Cantidad;
+        public int FlorId { get; set; }
+
+        public string Nombre { get; set; } = string.Empty;
+
+        //public string? ImagenUrl { get; set; }   // para mostrar foto en el frontend
+
+        public int Cantidad { get; set; }
+
+        public decimal PrecioUnitario { get; set; }
+
+        public decimal Subtotal => Cantidad * PrecioUnitario;
+
+        // public string? Variedad { get; set; }
+        // public bool Disponible { get; set; } = true;
+        // public int StockDisponible { get; set; }
     }
 }

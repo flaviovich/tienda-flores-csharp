@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections;
+using Microsoft.AspNetCore.Mvc;
 using ServidorTiendaDotNet.DTOs;
 using ServidorTiendaDotNet.Extensions;
 using ServidorTiendaDotNet.Services;
@@ -44,29 +45,38 @@ namespace ServidorTiendaDotNet.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(PedidoCreateDto pedido)
         {
-            _logger.LogInformation("Petición para registrar pedido recibida");
-
-            List<CarritoResponse>? carrito = HttpContext.Session.GetObjectFromJson<List<CarritoResponse>>("Carrito");
-
-            if (carrito == null || !carrito.Any())
+            if (!ModelState.IsValid)
             {
-                return BadRequest("El carrito está vacío. No se puede registrar el pedido.");
+                return BadRequest(ModelState); // aprovecha las validaciones automáticas
             }
 
-            List<PedidoCreateDto>? pedidos = HttpContext.Session.GetObjectFromJson<List<PedidoCreateDto>>("Pedidos");
-
-            if (pedidos == null)
+            var carrito = HttpContext.Session.GetObjectFromJson<List<CarritoItemDto>>("Carrito");
+            
+            if (carrito?.Any() != true)
             {
-                pedidos = new List<PedidoCreateDto>();
+                return BadRequest(new { mensaje = "El carrito está vacío o no existe" });
             }
-            pedidos.Add(pedido);
+            
+            try
+            {
+                var pedidoCreado = await _pedidoService.PedidoCreateAsync(pedido, carrito);
 
-            HttpContext.Session.SetObjectAsJson("Pedidos", pedidos);
-            HttpContext.Session.Remove("Carrito");
+                HttpContext.Session.Remove("Carrito");
 
-            var pedidoNew = await _pedidoService.PedidoCreateAsync(pedido, carrito.First());
+                _logger.LogInformation("Pedido creado exitosamente → ID: {Id}", pedidoCreado.Id);
 
-            return Ok(new { mensaje = "Pedido registrado exitosamente", id = pedidoNew.Id });
+                return Ok(new 
+                { 
+                    mensaje = "Pedido registrado correctamente",
+                    pedidoId = pedidoCreado.Id,
+                    total = pedidoCreado.Total 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear pedido para cliente {Cliente}", pedido.Cliente);
+                return StatusCode(500, new { mensaje = "Error interno al procesar el pedido" });
+            }
         }
 
         [HttpGet("items/{id}")]

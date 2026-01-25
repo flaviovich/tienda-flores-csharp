@@ -8,11 +8,13 @@ namespace ServidorTiendaDotNet.Services
     {
         readonly SqliteConnection _connection;
         readonly IFlorService _florService;
+        readonly ILogger<PedidoService> _logger;
 
-        public PedidoService(SqliteConnection connection, IFlorService florService)
+        public PedidoService(SqliteConnection connection, IFlorService florService, ILogger<PedidoService> logger)
         {
             _connection = connection;
             _florService = florService;
+            _logger = logger;
         }
 
         public async Task<List<PedidoResponse>> GetAllAsync()
@@ -71,6 +73,7 @@ namespace ServidorTiendaDotNet.Services
                 cantidad = reader.GetInt32(0);
                 total = reader.GetDecimal(1);
             }
+
             var pedidoCarritoResponse = new PedidoCarritoResponse
             {
                 Pedido = pedido!,
@@ -109,7 +112,7 @@ namespace ServidorTiendaDotNet.Services
             return null;
         }
 
-        public async Task<PedidoResponse> PedidoCreateAsync(PedidoCreateDto pedido, CarritoResponse carrito)
+        public async Task<PedidoResponse> PedidoCreateAsync(PedidoCreateDto pedido, List<CarritoItemDto> carrito)
         {
             if (_connection.State != System.Data.ConnectionState.Open)
             {
@@ -121,24 +124,37 @@ namespace ServidorTiendaDotNet.Services
                 Cliente = pedido.Cliente,
                 Telefono = pedido.Telefono,
                 Email = pedido.Email,
+                DireccionEnvio = pedido.DireccionEnvio,
+                MetodoPago = Enum.TryParse<MetodoPagoTipo>(pedido.MetodoPago, true, out var metodo)
+                    ? metodo
+                    : MetodoPagoTipo.Tarjeta, // fallback,
                 NumeroTarjeta = pedido.NumeroTarjeta,
-                DireccionEnvio = pedido.DireccionEnvio
+                Tipo = pedido.Tipo,
+                Notas = pedido.NotasEnvio,
             };
 
+            decimal subtotal;
             decimal total = 0;
             using var transaction = await _connection.BeginTransactionAsync();
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = @"
-                    INSERT INTO pedidos (nombre_cliente, direccion_envio, telefono, email, numero_tarjeta)
-                    VALUES ($cliente, $direccion_envio, $telefono, $email, $numero_tarjeta);
+                    INSERT INTO pedidos (nombre_cliente, telefono, email, direccion_envio, codigo_postal, ciudad,
+                                         numero_tarjeta, notas_envio, tipo, metodo_pago)
+                    VALUES ($cliente, $telefono, $email, $direccion_envio, $codigo_postal, $ciudad,
+                            $numero_tarjeta, $notas_envio, $tipo, $metodo_pago);
                 ";
 
                 command.Parameters.AddWithValue("$cliente", pedido.Cliente);
-                command.Parameters.AddWithValue("$direccion_envio", pedido.DireccionEnvio);
                 command.Parameters.AddWithValue("$telefono", pedido.Telefono);
                 command.Parameters.AddWithValue("$email", pedido.Email);
+                command.Parameters.AddWithValue("$direccion_envio", pedido.DireccionEnvio);
+                command.Parameters.AddWithValue("codigo_postal", pedido.CodigoPostal);
+                command.Parameters.AddWithValue("ciudad", pedido.Ciudad);
                 command.Parameters.AddWithValue("$numero_tarjeta", pedido.NumeroTarjeta);
+                command.Parameters.AddWithValue("notas_envio", pedido.NotasEnvio);
+                command.Parameters.AddWithValue("tipo", pedido.Tipo);
+                command.Parameters.AddWithValue("metodo_pago", pedido.MetodoPago);
                 await command.ExecuteNonQueryAsync();
 
                 // Obtener el ID del último registro insertado usando una consulta SQL
@@ -148,22 +164,25 @@ namespace ServidorTiendaDotNet.Services
                     var result = await lastIdCommand.ExecuteScalarAsync();
                     pedidoNew.Id = Convert.ToInt32(result);
                 }
-
+                
                 // Insertar los detalles del pedido y calcular el total
-                foreach (var item in carrito.Items)
+                foreach (var item in carrito)
                 {
+                    var flor = await _florService.GetByIdAsync(item.FlorId);
+                    subtotal = item.Cantidad * flor.Precio;
+                    total += subtotal;
+                    
                     using var detalleCommand = _connection.CreateCommand();
                     detalleCommand.CommandText = @"
-                        INSERT INTO pedido_detalles (pedido_id, flor_id, cantidad, precio_unitario)
-                        VALUES ($pedido_id, $flor_id, $cantidad, $precio_unitario);
+                        INSERT INTO pedido_detalles (pedido_id, flor_id, cantidad, precio_unitario, subtotal)
+                        VALUES ($pedido_id, $flor_id, $cantidad, $precio_unitario, $subtotal);
                     ";
                     detalleCommand.Parameters.AddWithValue("$pedido_id", pedidoNew.Id);
                     detalleCommand.Parameters.AddWithValue("$flor_id", item.FlorId);
                     detalleCommand.Parameters.AddWithValue("$cantidad", item.Cantidad);
-                    detalleCommand.Parameters.AddWithValue("$precio_unitario", item.PrecioUnitario);
+                    detalleCommand.Parameters.AddWithValue("$precio_unitario", flor.Precio);
+                    detalleCommand.Parameters.AddWithValue("$subtotal", subtotal);
                     await detalleCommand.ExecuteNonQueryAsync();
-
-                    total += item.Cantidad * item.PrecioUnitario;
                 }
 
                 // Redondeo a 2 decimales (estándar monetario)
@@ -203,6 +222,7 @@ namespace ServidorTiendaDotNet.Services
             {
                 await _connection.OpenAsync();
             }
+
             var detalles = new List<FlorCarrito>();
             using var command = _connection.CreateCommand();
             command.CommandText = @"
@@ -222,6 +242,7 @@ namespace ServidorTiendaDotNet.Services
                 };
                 detalles.Add(detalle);
             }
+
             return detalles;
         }
     }

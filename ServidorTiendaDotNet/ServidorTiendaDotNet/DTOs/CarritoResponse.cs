@@ -2,9 +2,20 @@ namespace ServidorTiendaDotNet.DTOs
 {
     public class CarritoResponse
     {
-        public int Id { get; init; }
-        public List<CarritoItemResponse> Items { get; init; } = new();
-        public int CantidadItems => Items.Sum(i => i.Cantidad);
-        public decimal Total => Items.Sum(i => i.Subtotal);
+        public List<CarritoItemResponse> Items { get; set; } = new List<CarritoItemResponse>();
+
+        public int TotalItems { get; set; }
+
+        //public decimal Subtotal { get; set; }
+
+        public decimal Total { get; set; }
+
+        public string? Mensaje { get; set; }
+
+        // public decimal? CosteEnvio { get; set; }
+        // public decimal? DescuentoAplicado { get; set; }
+        // public string? Moneda { get; set; } = "EUR";
+        // public bool TieneProductosAgotados { get; set; }
+        // public DateTime UltimaActualizacion { get; set; }
     }
 }
